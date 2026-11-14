@@ -1,0 +1,25 @@
+<section id="t-suggestions" class="panel" aria-label="AI suggested reply" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="panel-head">
+    <h2>Suggested reply</h2>
+    {% if not closed %}<button class="btn btn-small right" hx-post="/dashboard/tickets/{{ t.id }}/suggest" hx-target="#t-suggestions" hx-swap="outerHTML">{{ "Suggest another" if drafts else "Suggest a reply" }}</button>{% endif %}
+  </div>
+  <div class="panel-body stack">
+    {% if suggestion_note %}<div class="banner">No draft this time. {{ suggestion_note }} Write the reply yourself.</div>{% endif %}
+    {% for d in drafts %}
+      <form class="draft stack-s" hx-post="/dashboard/tickets/{{ t.id }}/replies/{{ d.id }}/accept" hx-target="#t-thread" hx-swap="outerHTML">
+        <label for="draft-{{ d.id }}">Draft for you to review. Nothing is sent until you post it.</label>
+        <textarea id="draft-{{ d.id }}" name="body" maxlength="5000">{{ d.body }}</textarea>
+        <div class="row">
+          <button class="btn btn-primary" type="submit">Post reply to customer</button>
+          <button class="btn" type="button" hx-post="/dashboard/tickets/{{ t.id }}/replies/{{ d.id }}/reject" hx-target="#t-suggestions" hx-swap="outerHTML">Discard draft</button>
+        </div>
+        <div class="small muted">Based on:
+          {% for s in d.sources %}<span class="chip chip-teal">{{ s.title }}</span> {% endfor %}
+          <span class="nowrap">match {{ d.confidence }}%</span></div>
+      </form>
+    {% endfor %}
+    {% if not drafts and not suggestion_note %}
+      <p class="muted">Drafts a reply from the knowledge base. You can edit it before it goes to the customer.</p>
+    {% endif %}
+  </div>
+</section>

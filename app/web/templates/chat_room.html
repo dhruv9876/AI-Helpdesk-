@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "macros.html" import status %}
+{% block title %}Chat with {{ chat.customer_name }}{% endblock %}
+{% block content %}
+<p class="small mb"><a href="/dashboard/chats">All chats</a></p>
+<div class="page-head"><div class="grow"><h1>Chat with {{ chat.customer_name }}</h1><p>Started {{ chat.created_at|ago }}</p></div></div>
+<div class="split">
+  {% include "partials/_chat_panel.html" %}
+  <aside class="stack" aria-label="Chat details">
+    {% include "partials/_chat_actions.html" %}
+    <section class="panel">
+      <div class="panel-head"><h2>Customer</h2></div>
+      <div class="panel-body"><dl class="facts"><dt>Name</dt><dd>{{ chat.customer_name }}</dd></dl></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Their recent tickets</h2></div>
+      {% for t in customer_tickets %}
+        <div class="person"><div class="grow"><a href="/dashboard/tickets/{{ t.id }}">#{{ t.id }} {{ t.subject }}</a><div class="small muted">{{ t.created_at|ago }}</div></div>{{ status(t.status) }}</div>
+      {% else %}<div class="empty">No tickets yet.</div>{% endfor %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "macros.html" import priority %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Overview</h1>
+  <p>{{ today.strftime("%A %d %B") }}</p>
+</div>
+
+<div class="now">
+  <section class="panel" aria-labelledby="attn-h">
+    <div class="panel-head">
+      <h2 id="attn-h">Needs attention</h2>
+      {% if counts.attention > 6 %}<a class="right small" href="/dashboard/tickets?attention=1">See all {{ counts.attention }} flagged tickets</a>{% endif %}
+    </div>
+    {% for c in waiting %}
+      <a class="work-item pri-urgent" href="/dashboard/chats/{{ c.id }}">
+        <div class="grow"><div class="t">{{ c.customer_name }} is waiting in chat</div>
+          <div class="why">{{ c.handoff_reason or "Asked for an agent" }}</div></div>
+        <div class="muted nowrap">waiting {{ c.updated_at|timeago }}</div>
+      </a>
+    {% endfor %}
+    {% for t in flagged %}
+      <a class="work-item pri-{{ t.priority.value }}" href="/dashboard/tickets/{{ t.id }}">
+        <div class="grow"><div class="t">{{ t.subject }}</div>
+          <div class="why">{{ t.attention_reason }}</div></div>
+        <div class="right ta-right">{{ priority(t.priority) }}<div class="muted small">{{ t.created_at|ago }}</div></div>
+      </a>
+    {% endfor %}
+    {% if not waiting and not flagged %}
+      <div class="empty"><strong>Nothing is waiting on you.</strong>
+        Urgent tickets, upset customers, repeat contacts and chats waiting for an agent show up here as they arrive.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="vit-h">
+    <div class="panel-head"><h2 id="vit-h">How we're doing</h2><span class="muted small right">last {{ times.window_days }} days</span></div>
+    <dl class="vitals">
+      <div><dt>Active tickets</dt><dd class="num">{{ counts.active }}<small>{{ counts.open }} open, {{ counts.pending }} pending</small></dd></div>
+      <div><dt>Median first reply</dt><dd class="num">{{ times.first_response_hours|hours }}<small>from {{ times.first_response_n }} ticket{{ "" if times.first_response_n == 1 else "s" }}</small></dd></div>
+      <div><dt>Median time to resolve</dt><dd class="num">{{ times.resolution_hours|hours }}<small>from {{ times.resolution_n }} ticket{{ "" if times.resolution_n == 1 else "s" }}</small></dd></div>
+      <div><dt>AI replies used by agents</dt>
+        <dd class="num">{% if ai.acceptance_rate is none %}no data yet{% else %}{{ (ai.acceptance_rate * 100)|round|int }}%{% endif %}
+          <small>{{ ai.replies_accepted + ai.replies_edited }} of {{ decided }} decided</small></dd></div>
+      <div><dt>Chats the bot finished alone</dt>
+        <dd class="num">{% if ai.handoff_rate is none %}no data yet{% else %}{{ ((1 - ai.handoff_rate) * 100)|round|int }}%{% endif %}
+          <small>{{ bot_finished }} of {{ ai.chats_total }} chats</small></dd></div>
+    </dl>
+  </section>
+</div>
+
+<section class="panel mt" aria-labelledby="vol-h">
+  <div class="panel-head"><h2 id="vol-h">Tickets created, last 14 days</h2><span class="muted small right">{{ days_total }} in total</span></div>
+  <div class="panel-body">
+    <svg class="chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="Bar chart of tickets created per day over the last 14 days, {{ days_total }} in total">
+      <line class="axis" x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ chart.base }}" y2="{{ chart.base }}"/>
+      <text x="{{ chart.left - 8 }}" y="{{ chart.base + 4 }}" text-anchor="end">0</text>
+      <text x="{{ chart.left - 8 }}" y="30" text-anchor="end">{{ chart.peak }}</text>
+      {% for b in chart.bars %}
+        <rect class="{{ 'bar-today' if b.last else 'bar-fill' }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}"><title>{{ b.title }}</title></rect>
+        {% if b.count %}<text class="val" x="{{ b.cx }}" y="{{ b.y - 6 }}" text-anchor="middle">{{ b.count }}</text>{% endif %}
+        <text x="{{ b.cx }}" y="{{ chart.label_y }}" text-anchor="middle">{{ b.label }}</text>
+      {% endfor %}
+    </svg>
+    <ul class="sr-only">{% for b in chart.bars %}<li>{{ b.title }}</li>{% endfor %}</ul>
+  </div>
+</section>
+
+{% macro hbars(rows, name, by_priority=false) %}
+  {% set h = 24 + rows|length * 30 %}
+  <svg class="chart" viewBox="0 0 590 {{ h }}" role="img" aria-label="{{ name }}">
+    {% for r in rows %}
+      {% set y = 18 + loop.index0 * 30 %}
+      <text class="lab" x="18" y="{{ y + 12 }}">{{ r.label|capitalize }}</text>
+      <rect class="axis" x="112" y="{{ y }}" width="420" height="16" fill="none"/>
+      <rect x="112" y="{{ y }}" width="{{ (420 * r.pct / 100)|round(1) }}" height="16" class="{{ ('pri-' ~ r.label ~ ' tag-bar') if by_priority else 'bar-fill' }}"/>
+      <text class="val" x="572" y="{{ y + 12 }}" text-anchor="end">{{ r.count }}</text>
+    {% endfor %}
+  </svg>
+{% endmacro %}
+
+<div class="split-even mt">
+  <section class="panel" aria-labelledby="pri-h">
+    <div class="panel-head"><h2 id="pri-h">Active tickets by priority</h2></div>
+    {{ hbars(by_priority, "Active tickets by priority", true) }}
+  </section>
+  <section class="panel" aria-labelledby="cat-h">
+    <div class="panel-head"><h2 id="cat-h">Active tickets by category</h2></div>
+    {% if by_category %}{{ hbars(by_category, "Active tickets by category") }}{% else %}<div class="empty">No active tickets.</div>{% endif %}
+  </section>
+</div>
+{% endblock %}

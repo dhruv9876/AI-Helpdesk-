@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}#{{ t.id }} {{ t.subject }}{% endblock %}
+{% block content %}
+<p class="small mb"><a href="/dashboard/tickets">All tickets</a></p>
+<div class="page-head">
+  <div class="grow">
+    <h1>{{ t.subject }}</h1>
+    <p>#{{ t.id }} from {{ t.customer.full_name }} ({{ t.customer.email }}), opened {{ t.created_at|ago }}</p>
+  </div>
+  {% include "partials/_t_chips.html" %}
+</div>
+{% if merged_into %}
+  <div class="banner banner-teal mb">This ticket was merged into <a href="/dashboard/tickets/{{ merged_into.id }}">#{{ merged_into.id }} {{ merged_into.subject }}</a> and is closed. Continue the conversation there.</div>
+{% endif %}
+<div class="split">
+  <div class="stack">
+    {% include "partials/_t_thread.html" %}
+    {% include "partials/_t_suggestions.html" %}
+  </div>
+  {% include "partials/_t_sidebar.html" %}
+</div>
+{% endblock %}

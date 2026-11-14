@@ -1,0 +1,21 @@
+<section class="panel" aria-labelledby="ppl-h">
+  <div class="panel-head"><h2 id="ppl-h">People</h2><span class="muted small">{{ people|length }}</span></div>
+  <div class="scroll-x"><table class="queue">
+    <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Account</th></tr></thead>
+    <tbody>
+    {% for p in people %}
+      <tr>
+        <td><b>{{ p.full_name }}</b><div class="small muted">{{ p.email }}</div></td>
+        <td><label class="sr-only" for="role-{{ p.id }}">Role for {{ p.full_name }}</label>
+          <select id="role-{{ p.id }}" name="role" hx-post="/dashboard/users/{{ p.id }}" hx-trigger="change" hx-target="#users-wrap" hx-swap="innerHTML"
+            {% if p.id == user.id %}disabled title="You can't change your own role"{% endif %}>
+            {% for r in roles %}<option value="{{ r }}" {% if p.role.value == r %}selected{% endif %}>{{ r|capitalize }}</option>{% endfor %}</select></td>
+        <td>{% if p.is_active %}<span class="chip chip-teal">Active</span>
+              {% if p.id != user.id %}<button class="btn btn-small" hx-post="/dashboard/users/{{ p.id }}" hx-vals='{"active": "0"}' hx-target="#users-wrap" hx-swap="innerHTML" data-confirm="Disable {{ p.full_name }}? They will be signed out of new requests and cannot sign in.">Disable</button>{% endif %}
+            {% else %}<span class="chip">Disabled</span>
+              <button class="btn btn-small" hx-post="/dashboard/users/{{ p.id }}" hx-vals='{"active": "1"}' hx-target="#users-wrap" hx-swap="innerHTML">Enable</button>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>

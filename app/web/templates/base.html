@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Helpdesk{% endblock %} - AI Helpdesk</title>
+  <meta name="htmx-config" content='{"allowEval": false, "includeIndicatorStyles": false, "historyCacheSize": 0}'>
+  <meta name="csrf-token" content="{{ csrf }}">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/vendor/htmx.min.js" defer></script>
+  <script src="/static/js/app.js" defer></script>
+  {% if user and user.role.value != "customer" %}<script src="/static/js/queue.js" defer></script>{% endif %}
+  {% block head %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRF-Token": "{{ csrf }}"}'>
+{% if user %}
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="/">Helpdesk</a>
+    <nav class="nav" aria-label="Main">
+      {% set path = request.url.path %}
+      {% if user.role.value == "customer" %}
+        <a href="/chat" {% if path.startswith("/chat") %}aria-current="page"{% endif %}>Chat</a>
+      {% else %}
+        <a href="/dashboard" {% if path == "/dashboard" %}aria-current="page"{% endif %}>Overview</a>
+        <a href="/dashboard/tickets" {% if path.startswith("/dashboard/tickets") %}aria-current="page"{% endif %}>Tickets
+          <span class="count" data-nav-attention data-n="{{ nav.attention or 0 }}" title="Tickets needing attention">{{ nav.attention or 0 }}</span></a>
+        <a href="/dashboard/chats" {% if path.startswith("/dashboard/chats") %}aria-current="page"{% endif %}>Chats
+          <span class="count" data-nav-waiting data-n="{{ nav.waiting_chats or 0 }}" title="Customers waiting for an agent">{{ nav.waiting_chats or 0 }}</span></a>
+        <a href="/dashboard/kb" {% if path.startswith("/dashboard/kb") %}aria-current="page"{% endif %}>Knowledge base</a>
+        {% if user.role.value == "admin" %}<a href="/dashboard/users" {% if path.startswith("/dashboard/users") %}aria-current="page"{% endif %}>Users</a>{% endif %}
+      {% endif %}
+    </nav>
+    <div class="who">
+      <span>{{ user.full_name }} <span class="muted">({{ user.role.value }})</span></span>
+      <button class="btn btn-small" hx-post="/logout">Sign out</button>
+    </div>
+  </div>
+</header>
+{% endif %}
+<main class="page">{% block content %}{% endblock %}</main>
+<div id="toasts" aria-live="polite"></div>
+</body>
+</html>

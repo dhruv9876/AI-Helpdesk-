@@ -1,0 +1,4 @@
+{# Response to "Create account": the new table, plus a fresh empty form (so no typed password lingers). #}
+{% include "partials/_users_table.html" %}
+{% set oob = true %}
+{% include "partials/_user_form.html" %}

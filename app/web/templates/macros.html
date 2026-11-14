@@ -1,0 +1,19 @@
+{# Shared bits of markup. Colour is never the only signal: every tag also says the word. #}
+{% macro priority(p) %}{% set v = p|val %}<span class="tag pri-{{ v }}">{{ v|capitalize }}</span>{% endmacro %}
+
+{% macro status(s) %}{% set v = s|val %}<span class="chip {{ {'open': 'chip-teal', 'pending': 'chip-amber', 'resolved': 'chip-blue', 'closed': ''}[v] }}">{{ v|capitalize }}</span>{% endmacro %}
+
+{% macro sentiment(s) %}{% set v = s|val %}{% if v == "angry" %}<span class="chip chip-signal">Angry</span>{% elif v == "frustrated" %}<span class="chip chip-amber">Frustrated</span>{% endif %}{% endmacro %}
+
+{% macro avatar_name(m) %}{{ m.sender_name }}{% endmacro %}
+
+{# A message in a ticket thread or chat log. `kind` is customer | agent | note (tickets) or mine | other | bot | system (chats). #}
+{% macro message(kind, who, when, body, sources=none, note_label=none, mid=none) %}
+<div class="msg msg-{{ kind }}"{% if mid %} data-id="{{ mid }}"{% endif %}>
+  {% if kind != "system" %}
+  <div class="msg-meta"><b>{{ who }}</b>{% if note_label %}<span class="chip chip-amber">{{ note_label }}</span>{% endif %}<span title="{{ when|stamp }}">{{ when|ago }}</span></div>
+  {% endif %}
+  <div class="msg-body">{{ body }}</div>
+  {% if sources %}<div class="sources">{% for s in sources %}<span class="chip chip-teal" title="Knowledge-base article">{{ s.title }}</span>{% endfor %}</div>{% endif %}
+</div>
+{% endmacro %}

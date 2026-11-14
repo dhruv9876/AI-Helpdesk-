@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Knowledge base{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h1>Knowledge base</h1><p>The assistant and suggested replies answer only from these articles.</p></div>
+  <a class="btn btn-primary" href="/dashboard/kb/new">New article</a>
+</div>
+<div class="split">
+  <section class="panel" aria-labelledby="art-h">
+    <div class="panel-head"><h2 id="art-h">Articles</h2><span class="muted small">{{ articles|length }}</span>
+      <form class="right" action="/dashboard/kb" method="get" role="search"><label class="sr-only" for="kq">Search titles</label><input id="kq" name="q" type="search" value="{{ q }}" placeholder="Search titles"></form></div>
+    {% if articles %}
+    <div class="scroll-x"><table class="queue">
+      <thead><tr><th scope="col">Title</th><th scope="col">Pieces</th><th scope="col" class="hide-s">Source</th><th scope="col">Updated</th></tr></thead>
+      <tbody>{% for a in articles %}
+        <tr><td><a class="subject" href="/dashboard/kb/{{ a.id }}">{{ a.title }}</a></td><td>{{ a.chunks|length }}</td><td class="hide-s muted">{{ a.source }}</td><td class="nowrap">{{ a.updated_at|ago }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}
+      <div class="empty"><strong>{% if q %}No article title matches "{{ q }}".{% else %}No articles yet.{% endif %}</strong>
+        {% if not q %}Add the first article, or upload a Markdown or text file. Until then the assistant will hand every question to a person.{% endif %}</div>
+    {% endif %}
+  </section>
+
+  <div class="stack">
+    <section class="panel" aria-labelledby="ask-h">
+      <div class="panel-head"><h2 id="ask-h">Test the assistant</h2></div>
+      <form class="panel-body stack-s" hx-post="/dashboard/kb/ask" hx-target="#ask-result">
+        <div class="field"><label for="ask-q">Ask it a customer question</label>
+          <input id="ask-q" name="question" required minlength="3" maxlength="1000" placeholder="How do I get a refund?"></div>
+        <button class="btn btn-primary" type="submit">See the answer</button>
+        <div id="ask-result" aria-live="polite"></div>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="up-h">
+      <div class="panel-head"><h2 id="up-h">Upload a file</h2></div>
+      <form class="panel-body stack-s" hx-post="/dashboard/kb/upload" hx-encoding="multipart/form-data">
+        <div class="field"><label for="up-file">Markdown or text file</label><input id="up-file" name="file" type="file" accept=".md,.txt" required></div>
+        <div class="field"><label for="up-title">Title <span class="muted">(optional)</span></label><input id="up-title" name="title" placeholder="Defaults to the file name"></div>
+        <button class="btn" type="submit">Upload</button>
+        <p class="hint">Up to 1 MB. PDF files are not supported yet.</p>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

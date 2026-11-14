@@ -1,0 +1,59 @@
+{% from "macros.html" import priority, sentiment %}
+<aside id="t-sidebar" class="stack" aria-label="Case details">
+  <section class="panel">
+    <div class="panel-head"><h2>Case</h2></div>
+    <form class="panel-body stack-s" hx-post="/dashboard/tickets/{{ t.id }}/fields" hx-trigger="change" hx-target="#t-sidebar" hx-swap="outerHTML">
+      <div class="field"><label for="c-status">Status</label>
+        <select id="c-status" name="status">{% for s in statuses %}<option value="{{ s }}" {% if t.status.value == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="c-priority">Priority</label>
+        <select id="c-priority" name="priority">{% for p in priorities %}<option value="{{ p }}" {% if t.priority.value == p %}selected{% endif %}>{{ p|capitalize }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="c-category">Category</label>
+        <select id="c-category" name="category"><option value="none" {% if not t.category %}selected{% endif %}>None</option>{% for c in categories %}<option value="{{ c }}" {% if t.category == c %}selected{% endif %}>{{ c|capitalize }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="c-assignee">Assigned to</label>
+        <select id="c-assignee" name="assignee"><option value="none" {% if not t.assignee_id %}selected{% endif %}>Unassigned</option>{% for a in agents %}<option value="{{ a.id }}" {% if t.assignee_id == a.id %}selected{% endif %}>{{ a.full_name }}{% if a.id == user.id %} (you){% endif %}</option>{% endfor %}</select></div>
+      {% if t.assignee_id != user.id %}<button class="btn btn-small" type="button" hx-post="/dashboard/tickets/{{ t.id }}/fields" hx-vals='{"assignee": "{{ user.id }}"}' hx-target="#t-sidebar" hx-swap="outerHTML">Assign to me</button>{% endif %}
+    </form>
+  </section>
+
+  <section class="panel" aria-label="AI triage">
+    <div class="panel-head"><h2>AI triage</h2>{% if t.ai_source %}<span class="small muted right">{{ t.ai_source }}</span>{% endif %}</div>
+    <div class="panel-body stack-s">
+      {% if t.triaged_at %}
+        <div class="ai-line"><span>Category</span><b>{{ (t.ai_category or "none")|capitalize }}</b></div>
+        <div class="ai-line"><span>Priority</span>{{ priority(t.ai_priority) if t.ai_priority else "none" }}</div>
+        <div class="ai-line"><span>Customer mood</span><span>{{ (t.sentiment|val|capitalize) if t.sentiment else "Unknown" }}</span></div>
+        <div class="ai-line"><span>Confidence in category</span><b>{{ ((t.ai_confidence or 0) * 100)|round|int }}%</b></div>
+        <p class="small muted">Checked {{ t.triaged_at|ago }}</p>
+        {% if t.needs_attention %}<div class="banner banner-signal"><b>Needs attention:</b> {{ t.attention_reason }}</div>{% endif %}
+        <div class="row">
+          {% if t.ai_category != t.category or t.ai_priority != t.priority %}
+            <button class="btn btn-small btn-primary" hx-post="/dashboard/tickets/{{ t.id }}/triage?apply=1" hx-target="#t-sidebar" hx-swap="outerHTML" data-confirm="Replace this ticket's category and priority with the AI suggestion?">Use these values</button>
+          {% endif %}
+          <button class="btn btn-small" hx-post="/dashboard/tickets/{{ t.id }}/triage" hx-target="#t-sidebar" hx-swap="outerHTML">Run again</button>
+        </div>
+        <p class="hint">The AI only suggests. The values above stay as you set them until you choose to use them.</p>
+      {% else %}
+        <p class="muted">This ticket has not been triaged yet.</p>
+        <button class="btn btn-small btn-primary" hx-post="/dashboard/tickets/{{ t.id }}/triage" hx-target="#t-sidebar" hx-swap="outerHTML">Run triage</button>
+      {% endif %}
+    </div>
+  </section>
+
+  <section id="t-duplicates" class="panel" aria-label="Possible duplicates">
+    <div class="panel-head"><h2>Possible duplicates</h2></div>
+    {% for d in duplicates %}
+      <div class="person">
+        <div class="grow">
+          <a href="/dashboard/tickets/{{ d.ticket.id }}">#{{ d.ticket.id }} {{ d.ticket.subject }}</a>
+          <div class="small muted">{{ d.customer_name }}, {{ d.pct }}% similar</div>
+        </div>
+        {% if d.can_merge and not t.merged_into_id and t.status.value != "closed" %}
+          <button class="btn btn-small" hx-post="/dashboard/tickets/{{ t.id }}/merge" hx-vals='{"target_id": {{ d.ticket.id }}}' data-confirm="Merge this ticket into #{{ d.ticket.id }}? This ticket will be closed and linked to it.">Merge into #{{ d.ticket.id }}</button>
+        {% elif not d.can_merge %}<span class="chip" title="Tickets can only be merged when they come from the same customer">Another customer</span>{% endif %}
+      </div>
+    {% else %}
+      <div class="empty">No similar active tickets found.</div>
+    {% endfor %}
+  </section>
+</aside>
+{% if chips_oob %}{% include "partials/_t_chips.html" %}{% endif %}

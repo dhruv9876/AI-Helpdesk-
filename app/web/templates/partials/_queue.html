@@ -1,0 +1,39 @@
+{% from "macros.html" import priority, status, sentiment %}
+{% if rows %}
+<div class="scroll-x">
+<table class="queue">
+  <thead><tr><th scope="col">Priority</th><th scope="col">Ticket</th><th scope="col" class="hide-s">Category</th><th scope="col">Assigned to</th><th scope="col">Status</th><th scope="col">Age</th></tr></thead>
+  <tbody>
+  {% for t in rows %}
+    <tr class="pri-{{ t.priority.value }}">
+      <td>{{ priority(t.priority) }}</td>
+      <td>
+        <a class="subject" href="/dashboard/tickets/{{ t.id }}">{{ t.subject }}</a>
+        <div class="small muted"><span class="id">#{{ t.id }}</span> from {{ t.customer.full_name }}</div>
+        {% if t.needs_attention and t.status.value in ("open", "pending") %}<div class="why">{{ t.attention_reason }}</div>{% endif %}
+        {% if t.merged_into_id %}<div class="small muted">Merged into #{{ t.merged_into_id }}</div>{% endif %}
+      </td>
+      <td class="hide-s">{% set cat = t.category or t.ai_category %}{% if cat %}<span class="chip">{{ cat|capitalize }}</span>{% else %}<span class="muted">None</span>{% endif %}
+        {{ sentiment(t.sentiment) if t.sentiment else "" }}</td>
+      <td>{% if t.assignee %}{{ t.assignee.full_name }}{% else %}<span class="muted">Unassigned</span>{% endif %}</td>
+      <td>{{ status(t.status) }}</td>
+      <td class="nowrap" title="{{ t.created_at|stamp }}">{{ t.created_at|timeago }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="pager">
+  <span class="muted">{{ first }} to {{ last }} of {{ total }}</span>
+  <span class="right row">
+    {% if prev_url %}<a class="btn btn-small" href="{{ prev_url }}" hx-get="{{ prev_url }}" hx-target="#queue">Previous</a>{% endif %}
+    {% if next_url %}<a class="btn btn-small" href="{{ next_url }}" hx-get="{{ next_url }}" hx-target="#queue">Next</a>{% endif %}
+  </span>
+</div>
+{% else %}
+<div class="empty">
+  {% if filtered %}<strong>No tickets match these filters.</strong>Try removing a filter or searching for something else.
+    <p class="mt"><a class="btn" href="/dashboard/tickets">Clear filters</a></p>
+  {% else %}<strong>No tickets here yet.</strong>New tickets appear as customers write in.{% endif %}
+</div>
+{% endif %}

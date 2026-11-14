@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+{% block content %}
+<div class="narrow stack">
+  <div>
+    <h1>How can we help?</h1>
+    <p class="muted">Ask a question and our assistant answers from our help articles. Say "agent" at any time to talk to a person.</p>
+  </div>
+  {% include "partials/_chat_panel.html" %}
+  <div class="row">
+    <button class="btn" type="button" data-send-text="agent" data-bot-only {% if chat.status.value != "bot" %}hidden{% endif %}>Talk to a person</button>
+    <button class="btn" hx-post="/chat/{{ chat.id }}/ticket" data-confirm="Turn this chat into a support ticket? The chat will end and we'll reply on the ticket.">Turn this chat into a ticket</button>
+    <button class="btn" hx-post="/chat/{{ chat.id }}/close" data-confirm="End this chat?">End chat</button>
+    <a class="btn btn-primary" href="/chat" data-new-chat {% if chat.status.value != "closed" %}hidden{% endif %}>Start a new chat</a>
+  </div>
+</div>
+{% endblock %}

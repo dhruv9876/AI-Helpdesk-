@@ -1,0 +1,2 @@
+{% from "macros.html" import priority, status %}
+<div id="t-chips" class="row" {% if chips_oob %}hx-swap-oob="true"{% endif %}>{{ priority(t.priority) }} {{ status(t.status) }}</div>

@@ -1,0 +1,20 @@
+<section id="chat-actions" class="panel" aria-label="Chat actions"
+  hx-get="/dashboard/chats/{{ chat.id }}/actions" hx-trigger="chat-status from:body" hx-swap="outerHTML">
+  <div class="panel-head"><h2>This chat</h2></div>
+  <div class="panel-body stack-s">
+    {% if chat.handoff_reason %}<div class="banner"><b>Why it's here:</b> {{ chat.handoff_reason }}</div>{% endif %}
+    {% if chat.status.value in ("bot", "waiting") %}
+      <button class="btn btn-primary" hx-post="/dashboard/chats/{{ chat.id }}/claim">Claim and reply</button>
+      <p class="hint">Claiming tells the customer an agent has joined. The bot stops answering.</p>
+    {% elif chat.status.value == "active" and chat.agent_id == user.id %}
+      <button class="btn" hx-post="/dashboard/chats/{{ chat.id }}/close" hx-target="#chat-actions" hx-swap="outerHTML" data-confirm="Close this chat?">Close chat</button>
+      <button class="btn" hx-post="/dashboard/chats/{{ chat.id }}/ticket" data-confirm="Turn this chat into a ticket? The chat will close.">Turn into a ticket</button>
+    {% elif chat.status.value == "active" %}
+      <p class="muted">{{ chat.agent_name }} is handling this chat. You can read along but not reply.</p>
+    {% else %}
+      <p class="muted">This chat has ended.</p>
+      {% if chat.ticket_id %}<a class="btn" href="/dashboard/tickets/{{ chat.ticket_id }}">Open ticket #{{ chat.ticket_id }}</a>
+      {% else %}<button class="btn" hx-post="/dashboard/chats/{{ chat.id }}/ticket">Turn into a ticket</button>{% endif %}
+    {% endif %}
+  </div>
+</section>

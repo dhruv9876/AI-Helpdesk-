@@ -1,0 +1,32 @@
+{% macro row(c, claim=false) %}
+  <div class="person">
+    <div class="grow">
+      <a href="/dashboard/chats/{{ c.id }}"><b>{{ c.customer_name }}</b></a>
+      {% if c.handoff_reason and c.status.value == "waiting" %}<div class="small why-chat">{{ c.handoff_reason }}</div>{% endif %}
+      {% if c.last_message %}<div class="small muted clip">{{ c.last_message }}</div>{% endif %}
+    </div>
+    <div class="muted small nowrap">{% if c.status.value == "waiting" %}waiting {{ (c.waiting_since or c.updated_at)|timeago }}{% else %}{{ c.updated_at|ago }}{% endif %}</div>
+    {% if claim %}<button class="btn btn-small btn-primary" hx-post="/dashboard/chats/{{ c.id }}/claim">Claim</button>{% endif %}
+  </div>
+{% endmacro %}
+
+<section class="panel" aria-labelledby="w-h">
+  <div class="panel-head"><h2 id="w-h">Waiting for an agent</h2><span class="muted small right">{{ waiting|length }}</span></div>
+  {% for c in waiting %}{{ row(c, true) }}{% else %}<div class="empty"><strong>No one is waiting.</strong>You'll see a notice here the moment a customer asks for a person.</div>{% endfor %}
+</section>
+<div class="split-even">
+  <section class="panel" aria-labelledby="m-h">
+    <div class="panel-head"><h2 id="m-h">Your chats</h2></div>
+    {% for c in mine %}{{ row(c) }}{% else %}<div class="empty">You have no open chats.</div>{% endfor %}
+  </section>
+  <section class="panel" aria-labelledby="o-h">
+    <div class="panel-head"><h2 id="o-h">With other agents and the bot</h2></div>
+    {% for c in others %}{{ row(c) }}{% endfor %}
+    {% for c in bot %}{{ row(c) }}{% endfor %}
+    {% if not others and not bot %}<div class="empty">Nothing else is open.</div>{% endif %}
+  </section>
+</div>
+<section class="panel" aria-labelledby="c-h">
+  <div class="panel-head"><h2 id="c-h">Recently closed</h2></div>
+  {% for c in closed %}{{ row(c) }}{% else %}<div class="empty">No closed chats yet.</div>{% endfor %}
+</section>

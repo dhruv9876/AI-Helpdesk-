@@ -1,0 +1,18 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0
+pydantic[email]>=2.7
+pydantic-settings>=2.3
+python-multipart>=0.0.9
+jinja2>=3.1
+PyJWT>=2.8
+bcrypt>=4.1
+pytest>=8.0
+pytest-timeout>=2.3  # websocket tests must never hang forever
+httpx>=0.27
+websockets>=13  # used by scripts/chat_client.py (also installed with uvicorn[standard])
+numpy>=1.26
+
+# Optional extras (the app runs without them):
+# anthropic>=0.40            # real LLM answers via Claude (set ANTHROPIC_API_KEY)
+# sentence-transformers>=3   # better embeddings (set EMBEDDING_BACKEND=sentence-transformers)

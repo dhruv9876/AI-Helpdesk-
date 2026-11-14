@@ -1,0 +1,33 @@
+{% from "macros.html" import message %}
+{# Shared by the agent room and the customer page. chat.js takes over from here. #}
+<section id="chat" class="panel chat" aria-label="Chat"
+  data-chat-id="{{ chat.id }}" data-me="{{ user.id }}" data-role="{{ role }}" data-status="{{ chat.status.value }}"
+  data-agent="{{ chat.agent_name or '' }}" data-agent-id="{{ chat.agent_id or '' }}"
+  {% if role == "customer" %}
+  data-t-bot="You're chatting with our assistant." data-t-waiting="Waiting for an agent to join. Keep typing; they'll see everything." data-t-active="You're chatting with {agent}." data-t-closed="This chat has ended."
+  {% else %}
+  data-t-bot="The customer is chatting with the bot. Claim the chat to take over." data-t-waiting="Waiting for an agent. Claim the chat to reply." data-t-active="{agent} is handling this chat." data-t-closed="This chat has ended."
+  {% endif %}>
+  <div class="panel-head">
+    <span data-status-text class="grow">
+      {% if chat.status.value == "bot" %}{{ "You're chatting with our assistant." if role == "customer" else "The customer is chatting with the bot. Claim the chat to take over." }}
+      {% elif chat.status.value == "waiting" %}{{ "Waiting for an agent to join. Keep typing; they'll see everything." if role == "customer" else "Waiting for an agent. Claim the chat to reply." }}
+      {% elif chat.status.value == "active" %}{{ ("You're chatting with " ~ chat.agent_name ~ ".") if role == "customer" else (chat.agent_name ~ " is handling this chat.") }}
+      {% else %}This chat has ended.{% endif %}
+    </span>
+    <span class="conn" data-conn data-state="connecting">Connecting...</span>
+  </div>
+  <div class="chat-log" data-log role="log" aria-live="polite" aria-label="Messages">
+    {% for item in messages %}
+      {{ message(item.kind, item.m.sender_name, item.m.created_at, item.m.body, sources=item.m.sources, mid=item.m.id) }}
+    {% endfor %}
+  </div>
+  <form class="chat-form" data-send>
+    <label class="sr-only" for="chat-input">Message</label>
+    <textarea id="chat-input" name="body" rows="1" maxlength="2000" autocomplete="off"
+      placeholder="{{ 'Type a message and press Enter' if can_send else ('Claim this chat to reply.' if role == 'agent' else 'This chat has ended.') }}"
+      {% if not can_send %}disabled{% endif %}></textarea>
+    <button class="btn btn-primary" type="submit" {% if not can_send %}disabled{% endif %}>Send</button>
+  </form>
+</section>
+<script src="/static/js/chat.js" defer></script>

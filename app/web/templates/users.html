@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Users</h1><p>Customers sign up themselves. Create accounts for your agents and admins here.</p></div>
+<div class="split">
+  <div id="users-wrap">{% include "partials/_users_table.html" %}</div>
+  {% include "partials/_user_form.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+<div class="stack-s">
+  {% if result.escalate %}
+    <div class="banner"><b>The assistant would hand this to a person.</b>
+      {% if result.confidence < 0.12 %}No article matches closely enough (best match {{ (result.confidence * 100)|round|int }}%).{% else %}The articles it found did not answer the question.{% endif %}
+      Add or reword an article to cover it.</div>
+  {% else %}
+    <div class="banner banner-teal"><b>Customers would see:</b><div class="msg-body">{{ result.answer }}</div></div>
+  {% endif %}
+  {% if sources %}<div class="small muted">Closest articles:</div>
+    <div class="sources">{% for s in sources %}<a class="chip chip-teal" href="/dashboard/kb/{{ s.article_id }}">{{ s.title }}</a>{% endfor %}</div>{% endif %}
+  <p class="hint">Answered by {{ result.llm }}. Match strength {{ (result.confidence * 100)|round|int }}%.</p>
+</div>

@@ -1,0 +1,20 @@
+{% from "macros.html" import message %}
+<section id="t-thread" class="panel" aria-label="Conversation" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="thread">
+    {% for m in thread %}
+      {{ message(m.kind, m.who, m.when, m.body, note_label=("Internal note, hidden from the customer" if m.note else none)) }}
+    {% endfor %}
+  </div>
+  {% if closed %}
+    <div class="reply"><p class="muted">This ticket is closed. Set the status back to Open to reply.</p></div>
+  {% else %}
+  <form class="reply stack-s" hx-post="/dashboard/tickets/{{ t.id }}/comments" hx-target="#t-thread" hx-swap="outerHTML">
+    <div class="field"><label for="reply-body">Write a reply</label>
+      <textarea id="reply-body" name="body" required maxlength="5000" placeholder="Your message to {{ t.customer.full_name }}"></textarea></div>
+    <div class="row">
+      <button class="btn btn-primary" type="submit">Send reply</button>
+      <div class="check"><input id="internal" type="checkbox" name="internal" value="1"><label for="internal">Internal note (the customer won't see it)</label></div>
+    </div>
+  </form>
+  {% endif %}
+</section>

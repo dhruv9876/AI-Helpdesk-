@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title if article else "New article" }}{% endblock %}
+{% block content %}
+<p class="small mb"><a href="/dashboard/kb">All articles</a></p>
+<div class="page-head"><h1>{{ article.title if article else "New article" }}</h1></div>
+<div class="split">
+  <form class="panel panel-body stack" hx-post="{{ '/dashboard/kb/' ~ article.id if article else '/dashboard/kb' }}">
+    <div class="field"><label for="a-title">Title</label>
+      <input id="a-title" name="title" required minlength="3" maxlength="200" value="{{ article.title if article else '' }}"></div>
+    <div class="field"><label for="a-content">Article</label>
+      <textarea id="a-content" name="content" required rows="16" maxlength="50000">{{ article.content if article else '' }}</textarea>
+      <p class="hint">Write the way customers ask. If people say "charged twice", say "charged twice" somewhere in the article, not only "duplicate payment". Separate ideas with a blank line.</p></div>
+    <div class="row">
+      <button class="btn btn-primary" type="submit">{{ "Save changes" if article else "Create article" }}</button>
+      <a class="btn" href="/dashboard/kb">Cancel</a>
+      {% if article and user.role.value == "admin" %}
+        <button class="btn btn-danger right" type="button" hx-post="/dashboard/kb/{{ article.id }}/delete" data-confirm="Delete '{{ article.title }}'? The assistant will stop using it.">Delete article</button>
+      {% endif %}
+    </div>
+  </form>
+  <section class="panel">
+    <div class="panel-head"><h2>How the assistant reads it</h2></div>
+    {% if article %}
+      <div class="panel-body stack-s">
+        <p class="muted small">Long articles are cut into pieces of up to about 700 characters, breaking at blank lines where possible. Short articles stay in one piece. The assistant finds the best-matching pieces for a question and answers from them.</p>
+        {% for c in article.chunks %}<div class="msg msg-bot"><div class="msg-meta"><b>Piece {{ loop.index }}</b></div><div class="msg-body">{{ c.text }}</div></div>{% endfor %}
+      </div>
+    {% else %}<div class="empty">Save the article to see how it is split into pieces.</div>{% endif %}
+  </section>
+</div>
+{% endblock %}

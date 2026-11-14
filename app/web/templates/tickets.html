@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Tickets{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Tickets</h1><p>Flagged tickets come first, then the highest priority, then the longest waiting.</p></div>
+
+<nav class="tabs" aria-label="Ticket status">
+  {% for key, label in tabs %}
+    <a href="{{ url(status=key, page=1) }}" {% if params.status == key %}aria-current="true"{% endif %}>{{ label }} <span class="n">{{ counts[key] }}</span></a>
+  {% endfor %}
+</nav>
+
+<form class="filters" action="/dashboard/tickets" method="get" role="search"
+      hx-get="/dashboard/tickets" hx-target="#queue" hx-trigger="change, input delay:300ms from:#q">
+  <input type="hidden" name="status" value="{{ params.status }}">
+  <div class="field"><label for="q">Search</label><input id="q" name="q" type="search" value="{{ params.q }}" placeholder="Subject, text or ticket number"></div>
+  <div class="field"><label for="f-priority">Priority</label>
+    <select id="f-priority" name="priority"><option value="">Any</option>
+      {% for p in ["urgent", "high", "medium", "low"] %}<option value="{{ p }}" {% if params.priority == p %}selected{% endif %}>{{ p|capitalize }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-category">Category</label>
+    <select id="f-category" name="category"><option value="">Any</option><option value="none" {% if params.category == "none" %}selected{% endif %}>Uncategorised</option>
+      {% for c in categories %}<option value="{{ c }}" {% if params.category == c %}selected{% endif %}>{{ c|capitalize }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-assignee">Assigned to</label>
+    <select id="f-assignee" name="assignee"><option value="">Anyone</option>
+      <option value="me" {% if params.assignee == "me" %}selected{% endif %}>Me</option>
+      <option value="none" {% if params.assignee == "none" %}selected{% endif %}>Unassigned</option>
+      {% for a in agents %}{% if a.id != user.id %}<option value="{{ a.id }}" {% if params.assignee == a.id|string %}selected{% endif %}>{{ a.full_name }}</option>{% endif %}{% endfor %}</select></div>
+  <div class="field"><label for="f-sort">Order</label>
+    <select id="f-sort" name="sort">
+      <option value="queue" {% if params.sort == "queue" %}selected{% endif %}>Work queue</option>
+      <option value="newest" {% if params.sort == "newest" %}selected{% endif %}>Newest first</option>
+      <option value="oldest" {% if params.sort == "oldest" %}selected{% endif %}>Oldest first</option></select></div>
+  <div class="check"><input id="f-attn" type="checkbox" name="attention" value="1" {% if params.attention %}checked{% endif %}><label for="f-attn">Needs attention only</label></div>
+  <noscript><button class="btn" type="submit">Apply filters</button></noscript>
+</form>
+
+<div id="queue" class="panel">{% include "partials/_queue.html" %}</div>
+{% endblock %}
